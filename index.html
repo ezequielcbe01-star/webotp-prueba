@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prueba WebOTP</title>
+</head>
+<body>
+  <h2>Verificación por SMS</h2>
+  <p>Prueba de autocompletado de códigos OTP</p>
+
+  <form id="form">
+    <label for="otp">Código de 6 dígitos</label>
+    <input
+      id="otp"
+      name="otp"
+      type="text"
+      inputmode="numeric"
+      autocomplete="one-time-code"
+      maxlength="6"
+      pattern="[0-9]{6}"
+      placeholder="123456"
+      required
+    >
+    <button type="button" id="esperar">Esperar SMS</button>
+    <button type="submit">Verificar código</button>
+  </form>
+
+  <p id="estado">Listo para realizar la prueba.</p>
+
+  <script>
+    const campo = document.getElementById("otp");
+    const estado = document.getElementById("estado");
+
+    document.getElementById("esperar").addEventListener("click", async () => {
+      if (!("OTPCredential" in window)) {
+        estado.textContent =
+          "WebOTP no está disponible en este navegador. Puedes usar el autocompletado del teclado.";
+        return;
+      }
+
+      estado.textContent = "Esperando SMS...";
+
+      try {
+        const otp = await navigator.credentials.get({
+          otp: { transport: ["sms"] }
+        });
+
+        campo.value = otp.code;
+        estado.textContent = "Código recibido automáticamente.";
+      } catch (error) {
+        estado.textContent = "No se pudo leer el SMS. Intenta nuevamente.";
+      }
+    });
+
+    document.getElementById("form").addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      if (/^[0-9]{6}$/.test(campo.value)) {
+        estado.textContent = "Código capturado correctamente. Falta validarlo con el servidor.";
+      }
+    });
+  </script>
+</body>
+</html>
